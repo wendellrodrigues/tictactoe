@@ -31,6 +31,9 @@ public class Game {
     @Column
     private Integer winner;
 
+    @Column
+    private Integer turn;
+
     public Player getPlayer2() {
         return player2;
     }

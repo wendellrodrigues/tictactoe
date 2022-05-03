@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class Play {
-    private Integer playerType;
+    private Player player;
     private Integer coordinateX;
     private Integer coordinateY;
     private String gameId;

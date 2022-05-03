@@ -9,7 +9,6 @@ import com.wendell.tictactoe.repository.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -41,6 +40,13 @@ public class GameService {
         return newGame;
     }
 
+    /**
+     * Method that allows for a second player to join the game
+     * @param player2 A player that joins the game (string)
+     * @param gameId
+     * @return game
+     * @throws InvalidGameException
+     */
     public Game connectToGame(Player player2, String gameId) throws InvalidGameException {
 
         //Check if game exists
@@ -51,7 +57,10 @@ public class GameService {
         //Get game
         Game game = gameRepository.getGame(gameId);
 
-        //Check if game is full (naturally handles games that are already over as well)
+        //Change status to in progress
+        game.setStatus("in-progress");
+
+        //Check if game is full (naturally handles games that are finished as well)
         if(game.getPlayer2() != null) {
             throw new InvalidGameException("Game is not available");
         }
@@ -60,12 +69,24 @@ public class GameService {
         player2.setPlayerId(UUID.randomUUID().toString());
         playerRepository.save(player2);
         game.setPlayer2(player2);
+        game.setTurn(2);
         gameRepository.save(game);
 
         return game;
     }
 
 
+    /**
+     * Allows for a player to make a move on the tic tac toe board
+     *
+     * @param move consists of
+     *             Integer playerType
+     *             Integer coordinateX
+     *             Integer coordinateY
+     *             String  gameId
+     * @return game
+     * @throws InvalidGameException
+     */
     public Game play(Play move) throws InvalidGameException {
         //Check if game exists
         if(!gameRepository.checkExistGame(move.getGameId()).isPresent()) {
@@ -77,28 +98,56 @@ public class GameService {
         if(game.getStatus().equals("finished")) {
             throw new InvalidGameException("Game is already over");
         }
+        if(game.getStatus().equals("new")) {
+            throw new InvalidGameException("Please wait for player 2 to join the game");
+        }
+
+        String playerId = move.getPlayer().getPlayerId();
+
+        Integer type;
+        if(game.getPlayer1().getPlayerId().equals(playerId)) {
+            type = 1;
+        } else if(game.getPlayer2().getPlayerId().equals(playerId)) {
+            type = 2;
+        } else {
+            throw new InvalidGameException("You are not authorized to play this game");
+        }
+
+        Integer turn = game.getTurn();
+        if(turn != type) {
+            throw new InvalidGameException("Please wait for your turn");
+        }
 
         int [][] board = game.getBoard();
 
         int xCoordinate = move.getCoordinateX();
         int yCoordinate = move.getCoordinateY();
-        System.out.print("X coordinate: ");
-        System.out.println(xCoordinate);
 
-        System.out.print("Y coordinate: ");
-        System.out.println(yCoordinate);
+        //Check if move has already been made
+        if(board[xCoordinate][yCoordinate] != 0) {
+            throw new InvalidGameException("You cannot make this move");
+        }
 
         //Set board to the player type (1 or 2)
-        board[xCoordinate][yCoordinate] = move.getPlayerType();
+        board[xCoordinate][yCoordinate] = type;
 
-        //See if X won
+        //See if X or O won
         Boolean xWinner = checkWinner(game.getBoard(), 1);
         Boolean oWinner = checkWinner(game.getBoard(), 2);
 
         if(xWinner) {
             game.setWinner(1); //Change to player in Model
+            game.setStatus("finished");
         } else if(oWinner) {
             game.setWinner(2); //Change to player in Model
+            game.setStatus("finished");
+        }
+
+        //Switch turn
+        if(type == 2) {
+            game.setTurn(1);
+        } else {
+            game.setTurn(2);
         }
 
         //Update the game (optional)
@@ -107,6 +156,12 @@ public class GameService {
         return game;
     }
 
+    /**
+     * Checks to see if a player type (1 or 2) is a winner
+     * @param board int [][] board
+     * @param type Player type (1 or 2)
+     * @return boolean if won or not won
+     */
     private Boolean checkWinner(int[][] board, Integer type) {
         //Create 1d array
         int [] boardArray = new int[9];
