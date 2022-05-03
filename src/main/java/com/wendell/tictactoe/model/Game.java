@@ -11,24 +11,27 @@ public class Game {
 
     @Id
     //@GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "game_id")
+    @Column
     private String gameId;
 
-    @OneToOne
-    @PrimaryKeyJoinColumn(name="player_id")
+    @ManyToOne
+    @JoinColumn(name="player1", referencedColumnName = "playerId")
     private Player player1;
 
-    @OneToOne
-    @PrimaryKeyJoinColumn(name="player_id")
+    @ManyToOne
+    @JoinColumn(name="player2", referencedColumnName = "playerId")
     private Player player2;
 
-    @Column(name="status")
+    @Column
     private String status;
 
-    @Column(name="board")
+    @Column
     private int [][] board;
 
-    @Column(name="winner")
+    @Column
     private Integer winner;
 
+    public Player getPlayer2() {
+        return player2;
+    }
 }

@@ -3,6 +3,7 @@ package com.wendell.tictactoe.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.UUID;
 
 @Data
 @Table(name="player")
@@ -10,14 +11,18 @@ import javax.persistence.*;
 public class Player {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "player_id")
-    Long playerId;
+    @Column
+    private String playerId;
 
-    @Column(name="name")
+    @Column
     private String name;
 
-    @Column(name="ip_address")
-    private String ipAddress;
+//    @Column
+//    private String ipAddress;
 
+    public Player() {}
+
+    public Player(String name) {
+        this.name = name;
+    }
 }

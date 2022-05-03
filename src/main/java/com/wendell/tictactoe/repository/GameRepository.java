@@ -11,6 +11,9 @@ import java.util.Optional;
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long> {
     //Select * FROM game where id = ?
-    @Query("SELECT s FROM Game s WHERE s.game_id = ?1")
-    Optional<Game> findGameById(String gameId);
+    @Query("SELECT s FROM Game s WHERE s.gameId = ?1")
+    Optional<Game> checkExistGame(String gameId);
+
+    @Query("SELECT s FROM Game s WHERE s.gameId = ?1")
+    Game getGame(String gameId);
 }
