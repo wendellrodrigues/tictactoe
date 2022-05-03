@@ -4,6 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+#Passwords, keys
+.resources/application.yml
+.resources/application-demo.yml
+
 ### STS ###
 .apt_generated
 .classpath
