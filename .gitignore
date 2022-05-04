@@ -4,9 +4,8 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-#Passwords, keys
-.resources/application.yml
-.resources/application-demo.yml
+#Passwords, keys, build stuff
+resources/
 
 ### STS ###
 .apt_generated
