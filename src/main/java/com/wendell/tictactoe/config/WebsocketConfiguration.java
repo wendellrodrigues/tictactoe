@@ -2,21 +2,25 @@ package com.wendell.tictactoe.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+@CrossOrigin
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/play").withSockJS();
-
+        registry.addEndpoint("/play") //Starting path for all websocket connections
+                .setAllowedOriginPatterns("*").withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/app").enableSimpleBroker("/topic");
+        registry.setApplicationDestinationPrefixes("/app"); //User will be sending data to the server here
+        registry.enableSimpleBroker("/topic"); //Topic to listen to
+        registry.setUserDestinationPrefix("/topic"); //May change later
     }
 }
