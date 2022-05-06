@@ -23,8 +23,15 @@ import {
 } from "../actions/init";
 
 const Game = (props) => {
-  const { game, player, type, opponentName, stompClient, connectingSocket } =
-    props;
+  const {
+    game,
+    player,
+    type,
+    opponentName,
+    stompClient,
+    sock,
+    connectingSocket,
+  } = props;
 
   const [gameBoard, setGameBoard] = useState({
     0: 0,
@@ -58,12 +65,6 @@ const Game = (props) => {
     },
   };
 
-  //Called at load.
-  useEffect(() => {
-    // Create socket connection
-    //props.createSocketConnection(game.gameId, stompClient);
-  }, []);
-
   //Listens for state changes of game and re-renders board every time
   useEffect(() => {
     mapGameToBoard(game.board);
@@ -87,7 +88,6 @@ const Game = (props) => {
   };
 
   const handleMove = (id) => {
-    console.log("handling move");
     let x, y;
     if (id == 0) {
       x = 0;
@@ -154,12 +154,12 @@ const Game = (props) => {
             <Tile onClick={() => handleMove(8)}>{displaySymbol(8)}</Tile>
           </Column>
         </Table>
-        {displayBelowBoarText()}
+        {displayBelowBoardText()}
       </TableWrapper>
     );
   };
 
-  const displayBelowBoarText = () => {
+  const displayBelowBoardText = () => {
     if (!game.player2) {
       return (
         <TurnWrapper>
@@ -177,19 +177,19 @@ const Game = (props) => {
   const WinnerText = () => {
     let Button;
 
-    console.log("next game");
-    console.log(game.nextGame);
-
+    //Checks to see if one of the players started a rematch.
+    //Button logic either creates a new game or joins already created game
     if (!game.nextGame) {
       Button = (
         <ButtonWrapper>
           <SubmitButton
             onClick={() => {
-              //window.location.reload();
-              props.playAgain(player, game);
+              stompClient.disconnect(); ///Disconnect from last game's socket connection
+              sock.close(); //Not sure if needed
+              props.playAgain(player, game, stompClient);
             }}
           >
-            <SubmitText>Create New Game</SubmitText>
+            <SubmitText>Rematch!</SubmitText>
           </SubmitButton>
         </ButtonWrapper>
       );
@@ -198,11 +198,12 @@ const Game = (props) => {
         <ButtonWrapper>
           <SubmitButton
             onClick={() => {
-              //window.location.reload();
+              stompClient.disconnect(); ///Disconnect from last game's socket connection
+              sock.close(); //Not sure if needed
               props.joinNewGame(game.nextGame);
             }}
           >
-            <SubmitText>Join Game</SubmitText>
+            <SubmitText>Rematch!</SubmitText>
           </SubmitButton>
         </ButtonWrapper>
       );
@@ -469,6 +470,7 @@ const mapStateToProps = (state) => ({
   type: state.init.type,
   opponentName: state.init.opponentName,
   stompClient: state.init.stompClient,
+  sock: state.init.sock,
   connectingSocket: state.init.connectingSocket,
 });
 

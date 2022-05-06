@@ -48,7 +48,7 @@ export const createSocketConnection =
       console.log(data);
       dispatch({
         type: CONNECT_SOCKET_SUCCESS,
-        payload: { data: data, stompClient: stompClient }, //Game
+        payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
       });
     };
   };
@@ -115,13 +115,13 @@ export const createGame =
       console.log(data);
       dispatch({
         type: CONNECT_SOCKET_SUCCESS,
-        payload: { data: data, stompClient: stompClient }, //Game
+        payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
       });
     };
   };
 
 //Function for creating new game after end of game
-export const playAgain = (player, oldGame) => async (dispatch) => {
+export const playAgain = (player, oldGame, stompClient) => async (dispatch) => {
   //Set CONNECTING socket to true
   dispatch({
     type: CONNECTING_SOCKET,
@@ -183,7 +183,7 @@ export const playAgain = (player, oldGame) => async (dispatch) => {
     console.log(data);
     dispatch({
       type: CONNECT_SOCKET_SUCCESS,
-      payload: { data: data, stompClient: stompClient }, //Game
+      payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
     });
   };
 };
@@ -223,7 +223,6 @@ export const joinGame =
     } catch (err) {
       const errors = err.response.data.errors;
       if (errors) {
-        console.log(errors);
       }
       dispatch({
         type: JOIN_GAME_FAIL,
@@ -260,7 +259,7 @@ export const joinGame =
       console.log(data);
       dispatch({
         type: CONNECT_SOCKET_SUCCESS,
-        payload: { data: data, stompClient: stompClient }, //Game
+        payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
       });
     };
   };
@@ -334,7 +333,7 @@ export const joinNewGame = (code) => async (dispatch) => {
     console.log(data);
     dispatch({
       type: CONNECT_SOCKET_SUCCESS,
-      payload: { data: data, stompClient: stompClient }, //Game
+      payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
     });
   };
 };

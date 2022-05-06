@@ -14,6 +14,7 @@ const initialState = {
   game: null,
   player: null,
   stompClient: null,
+  sock: null,
   connectingSocket: false,
   name: null,
   opponentName: null,
@@ -50,6 +51,7 @@ export default function init(state = initialState, action) {
         ...state,
         game: payload.data,
         stompClient: payload.stompClient,
+        sock: payload.sock,
         connectingSocket: false,
       };
     case CONNECT_SOCKET_FAIL:
