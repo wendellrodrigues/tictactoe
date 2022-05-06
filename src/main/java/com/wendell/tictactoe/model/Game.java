@@ -34,6 +34,12 @@ public class Game {
     @Column
     private Integer turn;
 
+    @Column
+    private Integer totalTurns;
+
+    @Column
+    private String nextGame;
+
     public Player getPlayer2() {
         return player2;
     }

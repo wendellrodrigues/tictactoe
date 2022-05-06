@@ -4,22 +4,27 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import StartForm from "./forms/StartForm";
 import PropTypes from "prop-types";
-
-//Different stomp clients (test)
-//import SockJsClient from "react-stomp";
-import { Stomp } from "@stomp/stompjs";
-import { over } from "stompjs";
-import * as SockJS from "sockjs-client";
+import Lottie from "react-lottie";
 
 //Icons
 import X_Icon from "../static/X_Icon.png";
 import O_Icon from "../static/O_Icon.png";
 
+//Lottie animations
+import loadingSpinner from "../static/loading.json";
+import waitingDots from "../static/waiting.json";
+
 //Actions
-import { createSocketConnection, makeAMove } from "../actions/init";
+import {
+  createSocketConnection,
+  makeAMove,
+  playAgain,
+  joinNewGame,
+} from "../actions/init";
 
 const Game = (props) => {
-  const { game, player, stompClient, connectingSocket } = props;
+  const { game, player, type, opponentName, stompClient, connectingSocket } =
+    props;
 
   const [gameBoard, setGameBoard] = useState({
     0: 0,
@@ -33,9 +38,30 @@ const Game = (props) => {
     8: 0,
   });
 
-  //Called at load. Create socket connection
+  //Lottie config
+  const loadingOpts = {
+    loop: true,
+    autoplay: true,
+    animationData: loadingSpinner,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid slice",
+    },
+  };
+
+  //Lottie config
+  const waitingOpts = {
+    loop: true,
+    autoplay: true,
+    animationData: waitingDots,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid slice",
+    },
+  };
+
+  //Called at load.
   useEffect(() => {
-    props.createSocketConnection(game.gameId, stompClient);
+    // Create socket connection
+    //props.createSocketConnection(game.gameId, stompClient);
   }, []);
 
   //Listens for state changes of game and re-renders board every time
@@ -109,29 +135,210 @@ const Game = (props) => {
 
   const TableComponent = () => {
     return (
-      <Table>
-        <Column>
-          <Tile onClick={() => handleMove(0)}>{displaySymbol(0)}</Tile>
-          <Tile onClick={() => handleMove(1)}>{displaySymbol(1)}</Tile>
-          <Tile onClick={() => handleMove(2)}>{displaySymbol(2)}</Tile>
-        </Column>
-        <Column>
-          <Tile onClick={() => handleMove(3)}>{displaySymbol(3)}</Tile>
-          <Tile onClick={() => handleMove(4)}>{displaySymbol(4)}</Tile>
-          <Tile onClick={() => handleMove(5)}>{displaySymbol(5)}</Tile>
-        </Column>
-        <Column>
-          <Tile onClick={() => handleMove(6)}>{displaySymbol(6)}</Tile>
-          <Tile onClick={() => handleMove(7)}>{displaySymbol(7)}</Tile>
-          <Tile onClick={() => handleMove(8)}>{displaySymbol(8)}</Tile>
-        </Column>
-      </Table>
+      <TableWrapper>
+        {HeadText()}
+        <Table>
+          <Column>
+            <Tile onClick={() => handleMove(0)}>{displaySymbol(0)}</Tile>
+            <Tile onClick={() => handleMove(1)}>{displaySymbol(1)}</Tile>
+            <Tile onClick={() => handleMove(2)}>{displaySymbol(2)}</Tile>
+          </Column>
+          <Column>
+            <Tile onClick={() => handleMove(3)}>{displaySymbol(3)}</Tile>
+            <Tile onClick={() => handleMove(4)}>{displaySymbol(4)}</Tile>
+            <Tile onClick={() => handleMove(5)}>{displaySymbol(5)}</Tile>
+          </Column>
+          <Column>
+            <Tile onClick={() => handleMove(6)}>{displaySymbol(6)}</Tile>
+            <Tile onClick={() => handleMove(7)}>{displaySymbol(7)}</Tile>
+            <Tile onClick={() => handleMove(8)}>{displaySymbol(8)}</Tile>
+          </Column>
+        </Table>
+        {displayBelowBoarText()}
+      </TableWrapper>
+    );
+  };
+
+  const displayBelowBoarText = () => {
+    if (!game.player2) {
+      return (
+        <TurnWrapper>
+          <InformationText>Waiting for opponent to join game</InformationText>
+          <Lottie options={waitingOpts} height={100} width={100} />
+        </TurnWrapper>
+      );
+    } else if (game.winner) {
+      return WinnerText();
+    } else {
+      return TurnText();
+    }
+  };
+
+  const WinnerText = () => {
+    let Button;
+
+    console.log("next game");
+    console.log(game.nextGame);
+
+    if (!game.nextGame) {
+      Button = (
+        <ButtonWrapper>
+          <SubmitButton
+            onClick={() => {
+              //window.location.reload();
+              props.playAgain(player, game);
+            }}
+          >
+            <SubmitText>Create New Game</SubmitText>
+          </SubmitButton>
+        </ButtonWrapper>
+      );
+    } else {
+      Button = (
+        <ButtonWrapper>
+          <SubmitButton
+            onClick={() => {
+              //window.location.reload();
+              props.joinNewGame(game.nextGame);
+            }}
+          >
+            <SubmitText>Join Game</SubmitText>
+          </SubmitButton>
+        </ButtonWrapper>
+      );
+    }
+
+    let winner = game.winner;
+    if (type == "creator") {
+      if (winner == 1) {
+        return (
+          <TurnWrapper>
+            <InfoText type="green">Congratulations! You won!</InfoText>
+            {Button}
+          </TurnWrapper>
+        );
+      } else {
+        return (
+          <TurnWrapper>
+            <InfoText type="red">You lost. Better luck next time!</InfoText>
+            {Button}
+          </TurnWrapper>
+        );
+      }
+    } else {
+      if (winner == 2) {
+        return (
+          <TurnWrapper>
+            <InfoText type="green">Congratulations! You won!</InfoText>
+            {Button}
+          </TurnWrapper>
+        );
+      } else {
+        return (
+          <TurnWrapper>
+            <InfoText type="red">You lost. Better luck next time!</InfoText>
+            {Button}
+          </TurnWrapper>
+        );
+      }
+    }
+  };
+
+  //Text that goes below board
+  const TurnText = () => {
+    let turn = game.turn;
+
+    if (type == "creator") {
+      if (game.turn == 1) {
+        return (
+          <TurnWrapper>
+            <InfoText type="green">{`It is your turn`}</InfoText>
+          </TurnWrapper>
+        );
+      } else {
+        let opponentName = game.player2.name;
+        if (opponentName.length == 0) opponentName = "your opponent";
+        return (
+          <TurnWrapper>
+            <InfoText type="red">{`It is ${opponentName}'s turn`}</InfoText>
+          </TurnWrapper>
+        );
+      }
+    } else {
+      if (game.turn == 2) {
+        return (
+          <TurnWrapper>
+            <InfoText type="green">{`It is your turn`}</InfoText>
+          </TurnWrapper>
+        );
+      } else {
+        let opponentName = game.player1.name;
+        if (opponentName.length == 0) opponentName = "your opponent";
+        return (
+          <TurnWrapper>
+            <InfoText type="red">{`It is ${opponentName}'s turn`}</InfoText>
+          </TurnWrapper>
+        );
+      }
+    }
+  };
+
+  const HeadText = () => {
+    let creatorName = game.player1.name;
+    let titleText = "";
+
+    //Handle title possibilities
+    if (creatorName.length > 0) {
+      titleText = `${creatorName}'s game`;
+    } else {
+      if (type == "creator") {
+        titleText = "Your game";
+      } else {
+        titleText = "Opponent's game";
+      }
+    }
+
+    let subHeadline;
+
+    if (!game.player2) {
+      subHeadline = (
+        <SubheadlineText>{`Share this game: ${game.gameId}`}</SubheadlineText>
+      );
+    } else {
+      let opponentName;
+
+      if (type == "creator") {
+        opponentName = game.player2.name;
+      } else {
+        opponentName = game.player1.name;
+      }
+      if (opponentName.length > 0) {
+        subHeadline = (
+          <SubheadlineText>{`Playing against ${opponentName}`}</SubheadlineText>
+        );
+      } else {
+        subHeadline = (
+          <SubheadlineText>{`Playing against opponent`}</SubheadlineText>
+        );
+      }
+    }
+
+    return (
+      <TitleWrapper>
+        <TitleText>{titleText}</TitleText>
+        {subHeadline}
+      </TitleWrapper>
     );
   };
 
   const handleView = () => {
     if (connectingSocket) {
-      return <div></div>;
+      return (
+        <LoadingGameWrapper>
+          <Lottie options={loadingOpts} height={400} width={400} />
+          <LoadingGameText>{`Connecting to game: ${game.gameId}`}</LoadingGameText>
+        </LoadingGameWrapper>
+      );
     } else {
       return TableComponent();
     }
@@ -140,10 +347,62 @@ const Game = (props) => {
   return <Fragment>{handleView()}</Fragment>;
 };
 
+const LoadingGameWrapper = styled.div`
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+`;
+
+const LoadingGameText = styled.p`
+  font-size: 30px;
+  font-weight: bold;
+  line-height: normal;
+`;
+
+const TitleWrapper = styled(LoadingGameWrapper)`
+  margin-bottom: 90px;
+`;
+
+const TitleText = styled.p`
+  font-size: 30px;
+  font-weight: bold;
+  line-height: normal;
+`;
+
+const SubheadlineText = styled.p`
+  font-size: 18px;
+  font-weight: bold;
+  line-height: normal;
+`;
+
+const InformationText = styled.p`
+  font-size: 15px;
+  font-weight: bold;
+  line-height: normal;
+`;
+
+const InfoText = styled.p`
+  font-size: 15px;
+  font-weight: bold;
+  line-height: normal;
+  color: ${(props) => (props.type == "green" ? "green" : "red")};
+`;
+
+const TurnWrapper = styled.div`
+  display: grid;
+  gap: -20px;
+  justify-items: center;
+`;
+
+const TableWrapper = styled.div``;
+
 const Table = styled.div`
   display: grid;
+  justify-content: center;
   grid-template-columns: auto auto auto;
+  margin-bottom: 20px;
 `;
+
 const Column = styled.div``;
 const Tile = styled.div`
   width: 100px;
@@ -168,18 +427,54 @@ const Symbol = styled.img`
   margin: auto;
 `;
 
+const ButtonWrapper = styled.div`
+  margin-top: 20px;
+  justify-content: center;
+  width: 100px;
+`;
+
+const SubmitButton = styled.div`
+  display: grid;
+  margin: auto;
+  height: 45px;
+  background: #171717;
+  border-radius: 10px;
+  justify-items: center;
+  align-items: center;
+  transition: 0.2s ease-in;
+  box-shadow: 0px 0px 5px #bababa;
+  :hover {
+    background: #1c1c1c;
+    cursor: pointer;
+  }
+`;
+
+export const SubmitText = styled.p`
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  line-height: normal;
+`;
+
 Game.propTypes = {
   createSocketConnection: PropTypes.func.isRequired,
   makeAMove: PropTypes.func.isRequired,
+  playAgain: PropTypes.func.isRequired,
+  joinNewGame: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   game: state.init.game,
   player: state.init.player,
+  type: state.init.type,
+  opponentName: state.init.opponentName,
   stompClient: state.init.stompClient,
   connectingSocket: state.init.connectingSocket,
 });
 
-export default connect(mapStateToProps, { createSocketConnection, makeAMove })(
-  Game
-);
+export default connect(mapStateToProps, {
+  createSocketConnection,
+  makeAMove,
+  playAgain,
+  joinNewGame,
+})(Game);

@@ -5,6 +5,7 @@ import com.wendell.tictactoe.controller.dao.ConnectionRequest;
 import com.wendell.tictactoe.exception.InvalidGameException;
 import com.wendell.tictactoe.model.Game;
 import com.wendell.tictactoe.model.Play;
+import com.wendell.tictactoe.model.PlayAgainGame;
 import com.wendell.tictactoe.model.Player;
 import com.wendell.tictactoe.service.GameService;
 import lombok.AllArgsConstructor;
@@ -29,8 +30,17 @@ public class GameController {
     @PostMapping("/start")
     public ResponseEntity<Game> start(@RequestBody Player player) {
         //log.info("start game request: {}", player);
-        System.out.println(player);
         Game game = gameService.createGame(player);
+        simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
+        return ResponseEntity.ok(game);
+    }
+
+    @PostMapping("/playAgain")
+    public ResponseEntity<Game> playAgain(@RequestBody PlayAgainGame againGame) {
+        Player player = againGame.getPlayer();
+        Game oldGame = againGame.getOldGame();
+        Game game = gameService.playAgain(player, oldGame);
+        simpMessagingTemplate.convertAndSend("/topic/game-progress/" + oldGame.getGameId(), oldGame);
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
         return ResponseEntity.ok(game);
     }

@@ -33,10 +33,20 @@ public class GameService {
         player.setPlayerId(UUID.randomUUID().toString());
         newGame.setBoard(new int[3][3]); //Create new tictactoe board (3X3)
         newGame.setGameId(UUID.randomUUID().toString()); //Create new id (to be stored and shared)
+        newGame.setTotalTurns(0);
         playerRepository.save(player); //Save player to db player table
         newGame.setPlayer1(player); //Set first player to creator
         newGame.setStatus("new"); //Set status to new game
         gameRepository.save(newGame); //Save game to db game table
+        return newGame;
+    }
+
+    public Game playAgain(Player player, Game oldGame) {
+        Game newGame = createGame(player);  //Create a new game
+        String newGameId = newGame.getGameId(); //Get the new game id
+        oldGame.setNextGame(newGameId); //Set the next game property of old game id to new
+        gameRepository.save(oldGame);
+        gameRepository.save(newGame);
         return newGame;
     }
 
@@ -149,6 +159,10 @@ public class GameService {
         } else {
             game.setTurn(2);
         }
+
+        //Set total turns
+        int totalTurns = game.getTotalTurns();
+        game.setTotalTurns(totalTurns + 1);
 
         //Update the game (optional)
         gameRepository.save(game);

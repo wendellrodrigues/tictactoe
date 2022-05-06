@@ -15,6 +15,9 @@ const initialState = {
   player: null,
   stompClient: null,
   connectingSocket: false,
+  name: null,
+  opponentName: null,
+  type: null, //Creator or joiner
 };
 
 export default function init(state = initialState, action) {
@@ -25,12 +28,16 @@ export default function init(state = initialState, action) {
         ...state,
         game: payload,
         player: payload.player1.playerId,
+        type: "creator",
+        name: payload.player1.name,
       };
     case JOIN_GAME_SUCCESS:
       return {
         ...state,
         game: payload,
         player: payload.player2.playerId,
+        type: "joiner",
+        name: payload.player2.name,
       };
     case CREATE_GAME_FAIL:
     case JOIN_GAME_FAIL:
