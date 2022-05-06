@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import { connect } from "react-redux";
 //import { Navigate } from "react-router-dom";
 import styled from "styled-components";
@@ -13,11 +13,6 @@ const Landing = (props) => {
   });
 
   const { game, player } = props;
-
-  //Subscribe to socket if game is found in redux store
-  if (game) {
-    console.log(game.gameId);
-  }
 
   const content = () => {
     if (game) {

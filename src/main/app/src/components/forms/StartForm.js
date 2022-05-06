@@ -2,10 +2,11 @@ import React, { useRef, useState, Fragment, useEffect } from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import PropTypes from "prop-types";
-import { createGame } from "../../actions/init";
+import { createGame, joinGame } from "../../actions/init";
 
 //Icon
 import KeyIcon from "../../static/icons/key.svg";
+import UserIcon from "../../static/icons/user.svg";
 
 //Styles
 import {
@@ -28,6 +29,7 @@ const StartForm = (props) => {
 
   //When user alters the form
   const onChange = (e) => {
+    console.log(e);
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -40,14 +42,16 @@ const StartForm = (props) => {
   };
 
   //When user clicks "Join Game"
-  const onJoinGame = () => {};
+  const onJoinGame = () => {
+    props.joinGame({ name, code });
+  };
 
   return (
     <Wrapper>
       <Form>
         <InputWrapper id="name">
           <Input name="name-input">
-            <Icon src={KeyIcon} name="name" />
+            <Icon src={UserIcon} name="name" />
             <TextField
               type="text"
               placeholder="Name"
@@ -68,21 +72,39 @@ const StartForm = (props) => {
             <SubmitText>Create Game</SubmitText>
           </SubmitButton>
         </ButtonWrapper>
-        <InputWrapper>
-          <Input name="name">
-            <Icon src={KeyIcon} name="name" />
-            <TextField
-              type="text"
-              placeholder="Code"
-              value={code}
-              onChange={(e) => onChange(e)}
-            />
-          </Input>
-        </InputWrapper>
+        <JoinGameWrapper>
+          <InputWrapper>
+            <Input name="name">
+              <Icon src={KeyIcon} name="name" />
+              <TextField
+                type="text"
+                placeholder="Code"
+                name="code"
+                value={code}
+                onChange={(e) => onChange(e)}
+              />
+            </Input>
+          </InputWrapper>
+          <ButtonWrapper>
+            <SubmitButton
+              onClick={(formData) => {
+                onJoinGame(formData);
+              }}
+            >
+              <SubmitText>Join Game</SubmitText>
+            </SubmitButton>
+          </ButtonWrapper>
+        </JoinGameWrapper>
       </Form>
     </Wrapper>
   );
 };
+
+const JoinGameWrapper = styled.div`
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto auto;
+`;
 
 const Spacer = styled.div`
   margin-bottom: 60px;
@@ -90,6 +112,7 @@ const Spacer = styled.div`
 
 StartForm.propTypes = {
   createGame: PropTypes.func.isRequired,
+  joinGame: PropTypes.func.isRequired,
 };
 
-export default connect(null, { createGame })(StartForm);
+export default connect(null, { createGame, joinGame })(StartForm);

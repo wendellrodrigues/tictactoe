@@ -5,12 +5,16 @@ import {
   JOIN_GAME_FAIL,
   CONNECT_SOCKET_SUCCESS,
   CONNECT_SOCKET_FAIL,
+  CONNECTING_SOCKET,
+  FINISHED_CONNECTING_SOCKET,
+  MOVE_SUCCESS,
 } from "../actions/types";
 
 const initialState = {
   game: null,
   player: null,
   stompClient: null,
+  connectingSocket: false,
 };
 
 export default function init(state = initialState, action) {
@@ -22,17 +26,16 @@ export default function init(state = initialState, action) {
         game: payload,
         player: payload.player1.playerId,
       };
-    case CREATE_GAME_SUCCESS:
+    case JOIN_GAME_SUCCESS:
       return {
         ...state,
         game: payload,
-        player: payload.player1.playerId,
+        player: payload.player2.playerId,
       };
     case CREATE_GAME_FAIL:
     case JOIN_GAME_FAIL:
       return {
         ...state,
-        game: null,
         player: null,
       };
     case CONNECT_SOCKET_SUCCESS:
@@ -40,11 +43,28 @@ export default function init(state = initialState, action) {
         ...state,
         game: payload.data,
         stompClient: payload.stompClient,
+        connectingSocket: false,
       };
     case CONNECT_SOCKET_FAIL:
       return {
         ...state,
         stompClient: null,
+        connectingSocket: false,
+      };
+    case CONNECTING_SOCKET:
+      return {
+        ...state,
+        connectingSocket: true,
+      };
+    case FINISHED_CONNECTING_SOCKET:
+      return {
+        ...state,
+        connectingSocket: false,
+      };
+    case MOVE_SUCCESS:
+      return {
+        ...state,
+        game: payload,
       };
     default:
       return state;

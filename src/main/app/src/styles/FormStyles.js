@@ -2,11 +2,11 @@ import styled from "styled-components";
 
 export const Wrapper = styled.div`
   position: relative;
-  width: 300px;
+  width: 600px;
   background: #fffff;
   height: auto;
   border-radius: 15px;
-  box-shadow: 0px 0px 5px gray;
+  box-shadow: 0px 0px 5px #bababa;
 `;
 
 export const Form = styled.div`
@@ -15,7 +15,7 @@ export const Form = styled.div`
   padding: 0px;
   margin: auto;
   padding: 10px;
-  width: 90%;
+  width: 100%;
   gap: 0px;
   justify-items: center;
 `;
@@ -41,7 +41,7 @@ export const Input = styled.div`
   width: 100%;
   height: 45px;
   background: #ffffff;
-  box-shadow: 0px 0px 5px gray;
+  box-shadow: 0px 0px 5px #bababa;
   transition: 0.3s linear;
 
 `;
@@ -74,11 +74,12 @@ export const SubmitButton = styled.div`
   margin: auto;
   width: 100%;
   height: 45px;
-  background: #000000;
+  background: #171717;
   border-radius: 10px;
   justify-items: center;
   align-items: center;
   transition: 0.2s ease-in;
+  box-shadow: 0px 0px 5px #bababa;
   :hover {
     background: #1c1c1c;
     cursor: pointer;
