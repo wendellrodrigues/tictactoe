@@ -40,6 +40,12 @@ public class Game {
     @Column
     private String nextGame;
 
+    @Column
+    private String player1Connection;
+
+    @Column
+    private String player2Connection;
+
     public Player getPlayer2() {
         return player2;
     }

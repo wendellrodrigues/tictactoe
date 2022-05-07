@@ -106,7 +106,7 @@ export const createGame =
 
     let Sock = new SockJS("/play");
     stompClient = over(Sock);
-    stompClient.connect({}, onConnected, onError);
+    stompClient.connect({ gameId }, onConnected, onError);
 
     //Function dispatches success with game payload and stomp client
     const onReceived = (payload) => {
@@ -126,6 +126,9 @@ export const playAgain = (player, oldGame, stompClient) => async (dispatch) => {
   dispatch({
     type: CONNECTING_SOCKET,
   });
+
+  console.log("Player");
+  console.log(player);
 
   //Set Headers
   const config = {

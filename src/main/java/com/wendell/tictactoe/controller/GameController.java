@@ -11,9 +11,12 @@ import com.wendell.tictactoe.service.GameService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 
 @CrossOrigin
@@ -29,7 +32,6 @@ public class GameController {
 
     @PostMapping("/start")
     public ResponseEntity<Game> start(@RequestBody Player player) {
-        //log.info("start game request: {}", player);
         Game game = gameService.createGame(player);
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
         return ResponseEntity.ok(game);
@@ -47,8 +49,6 @@ public class GameController {
 
     @PostMapping("/connect")
     public ResponseEntity<Game> connect(@RequestBody ConnectionRequest request) throws InvalidGameException {
-        //log.info("connect request: {}", request);
-        System.out.print(request);
         Game game = gameService.connectToGame(request.getPlayer(), request.getGameId());
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
         return ResponseEntity.ok(game);
@@ -56,11 +56,11 @@ public class GameController {
 
     @PostMapping("/play")
     public ResponseEntity<Game> play(@RequestBody Play request) throws InvalidGameException {
-        //log.info("play: {}", request);
-        System.out.println(request);
         Game game = gameService.play(request);
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game); //Only sent to browser listening to specific game id
         return ResponseEntity.ok(game);
     }
+
+
 
 }

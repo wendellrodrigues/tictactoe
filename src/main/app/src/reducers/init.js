@@ -28,7 +28,7 @@ export default function init(state = initialState, action) {
       return {
         ...state,
         game: payload,
-        player: payload.player1.playerId,
+        player: payload.player1,
         type: "creator",
         name: payload.player1.name,
       };
@@ -36,7 +36,7 @@ export default function init(state = initialState, action) {
       return {
         ...state,
         game: payload,
-        player: payload.player2.playerId,
+        player: payload.player2,
         type: "joiner",
         name: payload.player2.name,
       };

@@ -70,6 +70,16 @@ const Game = (props) => {
     mapGameToBoard(game.board);
   }, [game]);
 
+  window.addEventListener("beforeunload", (event) => {
+    // Cancel the event as stated by the standard.
+    event.preventDefault();
+    // Chrome requires returnValue to be set.
+    event.returnValue = "";
+
+    stompClient.disconnect(); ///Disconnect from last game's socket connection
+    sock.close(); //Not sure if needed
+  });
+
   //Sets the game board every time a move is made
   const mapGameToBoard = (board) => {
     console.log("mapping game to board");
@@ -118,7 +128,7 @@ const Game = (props) => {
       y = 2;
     }
     let gameId = game.gameId;
-    let playerId = player;
+    let playerId = player.playerId;
     props.makeAMove(x, y, playerId, gameId);
   };
 
@@ -209,20 +219,40 @@ const Game = (props) => {
       );
     }
 
+    const exitButton = (
+      <ButtonWrapper>
+        <SubmitButton
+          onClick={() => {
+            stompClient.disconnect(); ///Disconnect from last game's socket connection
+            sock.close(); //Not sure if needed
+            window.location.reload();
+          }}
+        >
+          <SubmitText>Exit</SubmitText>
+        </SubmitButton>
+      </ButtonWrapper>
+    );
+
     let winner = game.winner;
     if (type == "creator") {
       if (winner == 1) {
         return (
           <TurnWrapper>
             <InfoText type="green">Congratulations! You won!</InfoText>
-            {Button}
+            <TwoButtonWrapper>
+              {exitButton}
+              {Button}
+            </TwoButtonWrapper>
           </TurnWrapper>
         );
       } else {
         return (
           <TurnWrapper>
             <InfoText type="red">You lost. Better luck next time!</InfoText>
-            {Button}
+            <TwoButtonWrapper>
+              {exitButton}
+              {Button}
+            </TwoButtonWrapper>
           </TurnWrapper>
         );
       }
@@ -231,14 +261,20 @@ const Game = (props) => {
         return (
           <TurnWrapper>
             <InfoText type="green">Congratulations! You won!</InfoText>
-            {Button}
+            <TwoButtonWrapper>
+              {exitButton}
+              {Button}
+            </TwoButtonWrapper>
           </TurnWrapper>
         );
       } else {
         return (
           <TurnWrapper>
             <InfoText type="red">You lost. Better luck next time!</InfoText>
-            {Button}
+            <TwoButtonWrapper>
+              {exitButton}
+              {Button}
+            </TwoButtonWrapper>
           </TurnWrapper>
         );
       }
@@ -455,6 +491,12 @@ export const SubmitText = styled.p`
   font-size: 17px;
   font-weight: bold;
   line-height: normal;
+`;
+
+export const TwoButtonWrapper = styled.div`
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 20px;
 `;
 
 Game.propTypes = {
