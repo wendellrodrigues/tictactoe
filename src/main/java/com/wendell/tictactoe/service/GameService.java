@@ -41,8 +41,21 @@ public class GameService {
         return newGame;
     }
 
-    public Game playAgain(Player player, Game oldGame) {
-        Game newGame = createGame(player);  //Create a new game
+
+
+    /**
+     *
+     * @param player
+     * @param oldGame
+     * @return
+     */
+    public Game createGameWithId(Player player, Game oldGame) {
+        Game newGame = new Game();
+        newGame.setBoard(new int[3][3]); //Create new tictactoe board (3X3)
+        newGame.setGameId(UUID.randomUUID().toString()); //Create new id (to be stored and shared)
+        newGame.setTotalTurns(0);
+        newGame.setPlayer1(player); //Set first player to creator
+        newGame.setStatus("new"); //Set status to new game
         String newGameId = newGame.getGameId(); //Get the new game id
         oldGame.setNextGame(newGameId); //Set the next game property of old game id to new
         gameRepository.save(oldGame);
@@ -78,6 +91,38 @@ public class GameService {
         //Save player2
         player2.setPlayerId(UUID.randomUUID().toString());
         playerRepository.save(player2);
+        game.setPlayer2(player2);
+        game.setTurn(2);
+        gameRepository.save(game);
+
+        return game;
+    }
+
+
+    /**
+     * Function that is called when a player connects to a game
+     * ..their opponent has already created (rematch)
+     * @param player2 player object (with name and same playerId as previous game
+     * @param gameId new game id
+     * @return game
+     * @throws InvalidGameException
+     */
+    public Game connectWithId(Player player2, String gameId) throws InvalidGameException {
+        //Check if game exists
+        if(!gameRepository.checkExistGame(gameId).isPresent()) {
+            throw new InvalidGameException("Game does not exist");
+        }
+        //Get game
+        Game game = gameRepository.getGame(gameId);
+
+        //Change status to in progress
+        game.setStatus("in-progress");
+
+        //Check if game is full (naturally handles games that are finished as well)
+        if(game.getPlayer2() != null) {
+            throw new InvalidGameException("Game is not available");
+        }
+
         game.setPlayer2(player2);
         game.setTurn(2);
         gameRepository.save(game);

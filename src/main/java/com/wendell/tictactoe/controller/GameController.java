@@ -41,7 +41,7 @@ public class GameController {
     public ResponseEntity<Game> playAgain(@RequestBody PlayAgainGame againGame) {
         Player player = againGame.getPlayer();
         Game oldGame = againGame.getOldGame();
-        Game game = gameService.playAgain(player, oldGame);
+        Game game = gameService.createGameWithId(player, oldGame);
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + oldGame.getGameId(), oldGame);
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
         return ResponseEntity.ok(game);
@@ -50,6 +50,14 @@ public class GameController {
     @PostMapping("/connect")
     public ResponseEntity<Game> connect(@RequestBody ConnectionRequest request) throws InvalidGameException {
         Game game = gameService.connectToGame(request.getPlayer(), request.getGameId());
+        simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
+        return ResponseEntity.ok(game);
+    }
+
+    @PostMapping("/connectWithId")
+    public ResponseEntity<Game> connectWithId(@RequestBody ConnectionRequest request) throws InvalidGameException {
+        System.out.println("Connect with Id called");
+        Game game = gameService.connectWithId(request.getPlayer(), request.getGameId());
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
         return ResponseEntity.ok(game);
     }

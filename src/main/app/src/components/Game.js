@@ -45,6 +45,11 @@ const Game = (props) => {
     8: 0,
   });
 
+  const [score, setScore] = useState({
+    opponentId: "",
+    score: [],
+  });
+
   //Lottie config
   const loadingOpts = {
     loop: true,
@@ -68,6 +73,31 @@ const Game = (props) => {
   //Listens for state changes of game and re-renders board every time
   useEffect(() => {
     mapGameToBoard(game.board);
+
+    //Handle local score on loads
+    let player1 = game.player1;
+    let player2 = game.player2;
+
+    if (player1 !== null && player2 !== null) {
+      let gameId;
+      if (type == "creator") {
+        gameId = game.player2.playerId;
+      } else {
+        gameId = game.player1.playerId;
+      }
+
+      let score = JSON.parse(localStorage.getItem(gameId));
+      if (!score) {
+        localStorage.setItem(gameId, JSON.stringify([0, 0]));
+      }
+
+      setScore({
+        opponentId: gameId,
+        score: score,
+      });
+
+      console.log(score);
+    }
   }, [game]);
 
   window.addEventListener("beforeunload", (event) => {
@@ -169,7 +199,100 @@ const Game = (props) => {
     );
   };
 
+  const exitButton = (
+    <ButtonWrapper>
+      <SubmitButton
+        onClick={() => {
+          stompClient.disconnect(); ///Disconnect from last game's socket connection
+          sock.close(); //Not sure if needed
+          window.location.reload();
+        }}
+      >
+        <SubmitText>Exit</SubmitText>
+      </SubmitButton>
+    </ButtonWrapper>
+  );
+
+  let Button;
+
+  //Checks to see if one of the players started a rematch.
+  //Button logic either creates a new game or joins already created game
+  if (!game.nextGame) {
+    Button = (
+      <ButtonWrapper>
+        <SubmitButton
+          onClick={() => {
+            stompClient.disconnect(); ///Disconnect from last game's socket connection
+            sock.close(); //Not sure if needed
+            props.playAgain(player, game, stompClient);
+          }}
+        >
+          <SubmitText>Rematch!</SubmitText>
+        </SubmitButton>
+      </ButtonWrapper>
+    );
+  } else {
+    Button = (
+      <ButtonWrapper>
+        <SubmitButton
+          onClick={() => {
+            stompClient.disconnect(); ///Disconnect from last game's socket connection
+            sock.close(); //Not sure if needed
+            let thisPlayer;
+
+            props.joinNewGame(player, game.nextGame);
+          }}
+        >
+          <SubmitText>Rematch!</SubmitText>
+        </SubmitButton>
+      </ButtonWrapper>
+    );
+  }
+
+  //Updates the local score on wins/loss
+  const handleLocalScoreOnWinOrLoss = () => {
+    let self;
+    let opponent;
+    let winnerNum = game.winner;
+    let winner;
+    if (winnerNum == 1) winner = game.player1.playerId;
+    else winner = game.player2.playerId;
+
+    if (type == "creator") {
+      self = game.player1.playerId;
+      opponent = game.player2.playerId;
+    } else {
+      self = game.player2.playerId;
+      opponent = game.player1.playerId;
+    }
+
+    let score = JSON.parse(localStorage.getItem(opponent));
+    console.log(score);
+    let yourWins = score[0];
+    let opponentWins = score[1];
+    let newScore = [];
+
+    console.log(`Your wins: ${yourWins}`);
+    console.log(`Opponent wins: ${opponentWins}`);
+
+    console.log(`Winner: ${winner}`);
+    console.log(`Self: ${self}`);
+
+    if (winner == self) {
+      newScore = [yourWins + 1, opponentWins];
+    } else {
+      newScore = [yourWins, opponentWins + 1];
+    }
+
+    console.log(`new score`);
+    console.log(newScore);
+
+    localStorage.setItem(opponent, JSON.stringify(newScore));
+  };
+
   const displayBelowBoardText = () => {
+    let totalTurns = game.totalTurns;
+
     if (!game.player2) {
       return (
         <TurnWrapper>
@@ -178,62 +301,26 @@ const Game = (props) => {
         </TurnWrapper>
       );
     } else if (game.winner) {
+      handleLocalScoreOnWinOrLoss();
       return WinnerText();
+    } else if (totalTurns > 8 && game.winner == null) {
+      return (
+        <TurnWrapper>
+          <InfoText type="orange">Tie Game</InfoText>
+          <TwoButtonWrapper>
+            {exitButton}
+            {Button}
+          </TwoButtonWrapper>
+        </TurnWrapper>
+      );
     } else {
       return TurnText();
     }
   };
 
   const WinnerText = () => {
-    let Button;
-
-    //Checks to see if one of the players started a rematch.
-    //Button logic either creates a new game or joins already created game
-    if (!game.nextGame) {
-      Button = (
-        <ButtonWrapper>
-          <SubmitButton
-            onClick={() => {
-              stompClient.disconnect(); ///Disconnect from last game's socket connection
-              sock.close(); //Not sure if needed
-              props.playAgain(player, game, stompClient);
-            }}
-          >
-            <SubmitText>Rematch!</SubmitText>
-          </SubmitButton>
-        </ButtonWrapper>
-      );
-    } else {
-      Button = (
-        <ButtonWrapper>
-          <SubmitButton
-            onClick={() => {
-              stompClient.disconnect(); ///Disconnect from last game's socket connection
-              sock.close(); //Not sure if needed
-              props.joinNewGame(game.nextGame);
-            }}
-          >
-            <SubmitText>Rematch!</SubmitText>
-          </SubmitButton>
-        </ButtonWrapper>
-      );
-    }
-
-    const exitButton = (
-      <ButtonWrapper>
-        <SubmitButton
-          onClick={() => {
-            stompClient.disconnect(); ///Disconnect from last game's socket connection
-            sock.close(); //Not sure if needed
-            window.location.reload();
-          }}
-        >
-          <SubmitText>Exit</SubmitText>
-        </SubmitButton>
-      </ButtonWrapper>
-    );
-
     let winner = game.winner;
+    let totalTurns = game.totalTurns;
     if (type == "creator") {
       if (winner == 1) {
         return (
@@ -372,7 +459,7 @@ const Game = (props) => {
     if (connectingSocket) {
       return (
         <LoadingGameWrapper>
-          <Lottie options={loadingOpts} height={400} width={400} />
+          <Lottie options={loadingOpts} height={200} width={200} />
           <LoadingGameText>{`Connecting to game: ${game.gameId}`}</LoadingGameText>
         </LoadingGameWrapper>
       );
@@ -391,8 +478,8 @@ const LoadingGameWrapper = styled.div`
 `;
 
 const LoadingGameText = styled.p`
-  font-size: 30px;
-  font-weight: bold;
+  font-size: 20px;
+  font-weight: medium;
   line-height: normal;
 `;
 
@@ -408,7 +495,7 @@ const TitleText = styled.p`
 
 const SubheadlineText = styled.p`
   font-size: 18px;
-  font-weight: bold;
+  font-weight: medium;
   line-height: normal;
 `;
 
@@ -423,6 +510,22 @@ const InfoText = styled.p`
   font-weight: bold;
   line-height: normal;
   color: ${(props) => (props.type == "green" ? "green" : "red")};
+
+  ${(props) => {
+    if (props.type === "green")
+      return `
+            color: green
+        `;
+    else if (props.type === "red")
+      return `
+            color: red
+        `;
+    else
+      return `
+    color: orange;
+    
+    `;
+  }}
 `;
 
 const TurnWrapper = styled.div`

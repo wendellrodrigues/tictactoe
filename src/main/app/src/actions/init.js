@@ -267,9 +267,11 @@ export const joinGame =
     };
   };
 
-export const joinNewGame = (code) => async (dispatch) => {
-  console.log("join game called");
+//Function for joining new game (chain from old game)
+export const joinNewGame = (player, code) => async (dispatch) => {
+  console.log("join new game called");
   console.log(`Code: ${code}`);
+  console.log(player);
   //Set Headers
   dispatch({
     type: CONNECTING_SOCKET,
@@ -283,7 +285,8 @@ export const joinNewGame = (code) => async (dispatch) => {
   const body = `
     {
       "player": {
-        "name": ""
+        "name": "${player.name}",
+        "playerId": "${player.playerId}"
       },
       "gameId": "${code}"
     }
@@ -291,7 +294,7 @@ export const joinNewGame = (code) => async (dispatch) => {
 
   //Make request
   try {
-    const res = await axios.post(`/game/connect`, body, config);
+    const res = await axios.post(`/game/connectWithId`, body, config);
     dispatch({
       type: JOIN_GAME_SUCCESS,
       payload: res.data, //Game
