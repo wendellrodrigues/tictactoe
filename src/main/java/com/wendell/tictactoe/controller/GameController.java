@@ -70,7 +70,6 @@ public class GameController {
 
     @PostMapping("/connectWithId")
     public ResponseEntity<Game> connectWithId(@RequestBody ConnectionRequest request) throws InvalidGameException {
-        System.out.println("Connect with Id called");
         Game game = gameService.connectWithId(request.getPlayer(), request.getGameId());
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
         return ResponseEntity.ok(game);

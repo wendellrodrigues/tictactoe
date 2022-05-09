@@ -1,6 +1,5 @@
 import React, { useState, useEffect, Fragment } from "react";
 import { connect } from "react-redux";
-import StartForm from "./forms/StartForm";
 import PropTypes from "prop-types";
 
 import Lottie from "react-lottie";
@@ -11,12 +10,7 @@ import X_Icon from "../static/X_Icon.png";
 import O_Icon from "../static/O_Icon.png";
 
 //Actions
-import {
-  createSocketConnection,
-  makeAMove,
-  playAgain,
-  joinNewGame,
-} from "../actions/init";
+import { makeAMove, playAgain, joinNewGame } from "../actions/init";
 
 //Styles
 import {
@@ -42,15 +36,7 @@ import {
 } from "../styles/GameStyles";
 
 const Game = (props) => {
-  const {
-    game,
-    player,
-    type,
-    opponentName,
-    stompClient,
-    sock,
-    connectingSocket,
-  } = props;
+  const { game, player, type, stompClient, sock, connectingSocket } = props;
 
   const [gameBoard, setGameBoard] = useState({
     0: 0,
@@ -76,7 +62,7 @@ const Game = (props) => {
 
     if (player1 !== null && player2 !== null) {
       let gameId;
-      if (type == "creator") {
+      if (type === "creator") {
         gameId = game.player2.playerId;
       } else {
         gameId = game.player1.playerId;
@@ -102,21 +88,19 @@ const Game = (props) => {
   useEffect(() => {
     mapGameToBoard(game.board);
     setInitialScore(game);
-    console.log(`Score:`);
-    console.log(score);
   }, [game]);
 
   //For setting localStorage score after game is finished
   useEffect(() => {
-    if (game.status == "finished") {
+    if (game.status === "finished") {
       let self;
       let opponent;
       let winnerNum = game.winner;
       let winner;
-      if (winnerNum == 1) winner = game.player1.playerId;
+      if (winnerNum === 1) winner = game.player1.playerId;
       else winner = game.player2.playerId;
 
-      if (type == "creator") {
+      if (type === "creator") {
         self = game.player1.playerId;
         opponent = game.player2.playerId;
       } else {
@@ -130,7 +114,7 @@ const Game = (props) => {
       let opponentWins = score[1];
       let newScore = [];
 
-      if (winner == self) {
+      if (winner === self) {
         yourWins += 1;
       } else {
         opponentWins += 1;
@@ -175,31 +159,31 @@ const Game = (props) => {
   //Function that handles making a move
   const handleMove = (id) => {
     let x, y;
-    if (id == 0) {
+    if (id === 0) {
       x = 0;
       y = 0;
-    } else if (id == 1) {
+    } else if (id === 1) {
       x = 0;
       y = 1;
-    } else if (id == 2) {
+    } else if (id === 2) {
       x = 0;
       y = 2;
-    } else if (id == 3) {
+    } else if (id === 3) {
       x = 1;
       y = 0;
-    } else if (id == 4) {
+    } else if (id === 4) {
       x = 1;
       y = 1;
-    } else if (id == 5) {
+    } else if (id === 5) {
       x = 1;
       y = 2;
-    } else if (id == 6) {
+    } else if (id === 6) {
       x = 2;
       y = 0;
-    } else if (id == 7) {
+    } else if (id === 7) {
       x = 2;
       y = 1;
-    } else if (id == 8) {
+    } else if (id === 8) {
       x = 2;
       y = 2;
     }
@@ -210,9 +194,9 @@ const Game = (props) => {
 
   //Displays relevant X and O symbols on board based on game state
   const displaySymbol = (id) => {
-    if (gameBoard[id] == 0) {
+    if (gameBoard[id] === 0) {
       return <div></div>;
-    } else if (gameBoard[id] == 1) {
+    } else if (gameBoard[id] === 1) {
       return <Symbol src={X_Icon} />;
     } else {
       return <Symbol src={O_Icon} />;
@@ -288,8 +272,6 @@ const Game = (props) => {
             onClick={() => {
               stompClient.disconnect(); ///Disconnect from last game's socket connection
               sock.close(); //Not sure if needed
-              let thisPlayer;
-
               props.joinNewGame(player, game.nextGame);
             }}
           >
@@ -314,7 +296,7 @@ const Game = (props) => {
       );
     } else if (game.winner) {
       return WinnerText();
-    } else if (totalTurns > 8 && game.winner == null) {
+    } else if (totalTurns > 8 && game.winner === null) {
       return (
         <TurnWrapper>
           <InfoText type="orange">Tie Game</InfoText>
@@ -331,9 +313,8 @@ const Game = (props) => {
 
   const WinnerText = () => {
     let winner = game.winner;
-    let totalTurns = game.totalTurns;
-    if (type == "creator") {
-      if (winner == 1) {
+    if (type === "creator") {
+      if (winner === 1) {
         return (
           <TurnWrapper>
             <InfoText type="green">Congratulations! You won!</InfoText>
@@ -355,7 +336,7 @@ const Game = (props) => {
         );
       }
     } else {
-      if (winner == 2) {
+      if (winner === 2) {
         return (
           <TurnWrapper>
             <InfoText type="green">Congratulations! You won!</InfoText>
@@ -381,10 +362,8 @@ const Game = (props) => {
 
   //Text that goes below board
   const TurnText = () => {
-    let turn = game.turn;
-
-    if (type == "creator") {
-      if (game.turn == 1) {
+    if (type === "creator") {
+      if (game.turn === 1) {
         return (
           <TurnWrapper>
             <InfoText type="green">{`It is your turn`}</InfoText>
@@ -392,7 +371,7 @@ const Game = (props) => {
         );
       } else {
         let opponentName = game.player2.name;
-        if (opponentName.length == 0) opponentName = "your opponent";
+        if (opponentName.length === 0) opponentName = "your opponent";
         return (
           <TurnWrapper>
             <InfoText type="red">{`It is ${opponentName}'s turn`}</InfoText>
@@ -400,7 +379,7 @@ const Game = (props) => {
         );
       }
     } else {
-      if (game.turn == 2) {
+      if (game.turn === 2) {
         return (
           <TurnWrapper>
             <InfoText type="green">{`It is your turn`}</InfoText>
@@ -408,7 +387,7 @@ const Game = (props) => {
         );
       } else {
         let opponentName = game.player1.name;
-        if (opponentName.length == 0) opponentName = "your opponent";
+        if (opponentName.length === 0) opponentName = "your opponent";
         return (
           <TurnWrapper>
             <InfoText type="red">{`It is ${opponentName}'s turn`}</InfoText>
@@ -426,7 +405,7 @@ const Game = (props) => {
     if (creatorName.length > 0) {
       titleText = `${creatorName}'s game`;
     } else {
-      if (type == "creator") {
+      if (type === "creator") {
         titleText = "Your game";
       } else {
         titleText = "Opponent's game";
@@ -442,7 +421,7 @@ const Game = (props) => {
     } else {
       let opponentName;
 
-      if (type == "creator") {
+      if (type === "creator") {
         opponentName = game.player2.name;
       } else {
         opponentName = game.player1.name;
@@ -473,7 +452,7 @@ const Game = (props) => {
       let yourName;
       let opponentName;
 
-      if (type == "creator") {
+      if (type === "creator") {
         self = game.player1;
         opponent = game.player2;
       } else {
@@ -484,8 +463,8 @@ const Game = (props) => {
       yourName = self.name;
       opponentName = opponent.name;
 
-      if (yourName == "") yourName = "You";
-      if (opponentName == "") opponentName = "Opponent";
+      if (yourName === "") yourName = "You";
+      if (opponentName === "") opponentName = "Opponent";
 
       const yourWins = score.yourWins;
       const opponentWins = score.opponentWins;
@@ -535,7 +514,6 @@ const mapStateToProps = (state) => ({
 });
 
 export default connect(mapStateToProps, {
-  createSocketConnection,
   makeAMove,
   playAgain,
   joinNewGame,

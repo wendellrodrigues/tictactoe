@@ -33,15 +33,13 @@ public class SubscribeEventListener implements ApplicationListener, SubscribeEve
 
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
-        //System.out.println(event);
+    
     }
 
     @EventListener
     public void handleSessionDisconnect(SessionDisconnectEvent event) {
-        System.out.println("disconnecting");
         StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = sha.getSessionId();
-        System.out.println(sessionId);
     }
 
     @EventListener
@@ -69,7 +67,6 @@ public class SubscribeEventListener implements ApplicationListener, SubscribeEve
             gameRepository.save(game);
             //Alert the socket
             simpMessagingTemplate.convertAndSend("/topic/game-progress/" + gameId, game);
-            System.out.println("sent message");
         }
 
     }

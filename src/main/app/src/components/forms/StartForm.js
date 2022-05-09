@@ -1,6 +1,5 @@
-import React, { useRef, useState, Fragment, useEffect } from "react";
+import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import PropTypes from "prop-types";
 import {
   createGame,
@@ -24,8 +23,6 @@ import {
   ButtonWrapper,
   SubmitButton,
   SubmitText,
-  AlertWrapper,
-  AlertText,
   JoinGameWrapper,
   Spacer,
   OrText,
@@ -37,7 +34,6 @@ const StartForm = (props) => {
 
   //When user alters the form
   const onChange = (e) => {
-    console.log(e);
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,

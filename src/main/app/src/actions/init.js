@@ -17,42 +17,6 @@ import {
   MOVE_SUCCESS,
 } from "./types";
 
-//Create socket connection action (DEPRECATED)
-export const createSocketConnection =
-  (gameId, stompClient) => async (dispatch) => {
-    console.log("create socket connection called");
-    //Helper function for when connected
-    const onConnected = () => {
-      dispatch({
-        type: FINISHED_CONNECTING_SOCKET,
-      });
-      stompClient.subscribe(`/topic/game-progress/${gameId}`, onReceived);
-    };
-
-    //Function dispatches error to reducer
-    const onError = () => {
-      console.log(onError);
-      dispatch({
-        type: CONNECT_SOCKET_FAIL,
-      });
-    };
-
-    let Sock = new SockJS("/play");
-    stompClient = over(Sock);
-    stompClient.connect({}, onConnected, onError);
-
-    //Function dispatches success with game payload and stomp client
-    const onReceived = (payload) => {
-      console.log("received");
-      let data = JSON.parse(payload.body);
-      console.log(data);
-      dispatch({
-        type: CONNECT_SOCKET_SUCCESS,
-        payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
-      });
-    };
-  };
-
 //Create game action
 export const createGame =
   ({ name }) =>
@@ -79,7 +43,6 @@ export const createGame =
         payload: res.data, //Game
       });
     } catch (err) {
-      console.log(err);
       dispatch({
         type: CREATE_GAME_FAIL,
       });
@@ -101,7 +64,6 @@ export const createGame =
 
     //Function dispatches error to reducer
     const onError = () => {
-      console.log(onError);
       dispatch({
         type: CONNECT_SOCKET_FAIL,
       });
@@ -113,9 +75,7 @@ export const createGame =
 
     //Function dispatches success with game payload and stomp client
     const onReceived = (payload) => {
-      console.log("received");
       let data = JSON.parse(payload.body);
-      console.log(data);
       dispatch({
         type: CONNECT_SOCKET_SUCCESS,
         payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
@@ -154,7 +114,6 @@ export const createGameWithPlayerId = (id, name) => async (dispatch) => {
       payload: res.data, //Game
     });
   } catch (err) {
-    console.log(err);
     dispatch({
       type: CREATE_GAME_FAIL,
     });
@@ -176,7 +135,6 @@ export const createGameWithPlayerId = (id, name) => async (dispatch) => {
 
   //Function dispatches error to reducer
   const onError = () => {
-    console.log(onError);
     dispatch({
       type: CONNECT_SOCKET_FAIL,
     });
@@ -188,9 +146,7 @@ export const createGameWithPlayerId = (id, name) => async (dispatch) => {
 
   //Function dispatches success with game payload and stomp client
   const onReceived = (payload) => {
-    console.log("received");
     let data = JSON.parse(payload.body);
-    console.log(data);
     dispatch({
       type: CONNECT_SOCKET_SUCCESS,
       payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
@@ -204,9 +160,6 @@ export const playAgain = (player, oldGame, stompClient) => async (dispatch) => {
   dispatch({
     type: CONNECTING_SOCKET,
   });
-
-  console.log("Player");
-  console.log(player);
 
   //Set Headers
   const config = {
@@ -228,7 +181,6 @@ export const playAgain = (player, oldGame, stompClient) => async (dispatch) => {
       payload: res.data, //Game
     });
   } catch (err) {
-    console.log(err);
     dispatch({
       type: CREATE_GAME_FAIL,
     });
@@ -247,7 +199,6 @@ export const playAgain = (player, oldGame, stompClient) => async (dispatch) => {
 
   //Function dispatches error to reducer
   const onError = () => {
-    console.log(onError);
     dispatch({
       type: CONNECT_SOCKET_FAIL,
     });
@@ -259,9 +210,7 @@ export const playAgain = (player, oldGame, stompClient) => async (dispatch) => {
 
   //Function dispatches success with game payload and stomp client
   const onReceived = (payload) => {
-    console.log("received");
     let data = JSON.parse(payload.body);
-    console.log(data);
     dispatch({
       type: CONNECT_SOCKET_SUCCESS,
       payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
@@ -273,8 +222,6 @@ export const playAgain = (player, oldGame, stompClient) => async (dispatch) => {
 export const joinGame =
   ({ name, code }) =>
   async (dispatch) => {
-    console.log("join game called");
-    console.log(`Code: ${code}`);
     //Set Headers
     dispatch({
       type: CONNECTING_SOCKET,
@@ -327,7 +274,6 @@ export const joinGame =
 
     //Function dispatches error to reducer
     const onError = () => {
-      console.log(onError);
       dispatch({
         type: CONNECT_SOCKET_FAIL,
       });
@@ -339,9 +285,7 @@ export const joinGame =
 
     //Function dispatches success with game payload and stomp client
     const onReceived = (payload) => {
-      console.log("received");
       let data = JSON.parse(payload.body);
-      console.log(data);
       dispatch({
         type: CONNECT_SOCKET_SUCCESS,
         payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
@@ -351,9 +295,6 @@ export const joinGame =
 
 //Function for joining new game (with local storage token)
 export const joinWithPlayerId = (player, code) => async (dispatch) => {
-  console.log("join new game called");
-  console.log(`Code: ${code}`);
-  console.log(player);
   //Set Headers
   dispatch({
     type: CONNECTING_SOCKET,
@@ -382,10 +323,6 @@ export const joinWithPlayerId = (player, code) => async (dispatch) => {
       payload: res.data, //Game
     });
   } catch (err) {
-    const errors = err.response.data.errors;
-    if (errors) {
-      console.log(errors);
-    }
     dispatch({
       type: JOIN_GAME_FAIL,
     });
@@ -404,7 +341,6 @@ export const joinWithPlayerId = (player, code) => async (dispatch) => {
 
   //Function dispatches error to reducer
   const onError = () => {
-    console.log(onError);
     dispatch({
       type: CONNECT_SOCKET_FAIL,
     });
@@ -416,9 +352,7 @@ export const joinWithPlayerId = (player, code) => async (dispatch) => {
 
   //Function dispatches success with game payload and stomp client
   const onReceived = (payload) => {
-    console.log("received");
     let data = JSON.parse(payload.body);
-    console.log(data);
     dispatch({
       type: CONNECT_SOCKET_SUCCESS,
       payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
@@ -428,9 +362,6 @@ export const joinWithPlayerId = (player, code) => async (dispatch) => {
 
 //Function for joining new game (chain from old game)
 export const joinNewGame = (player, code) => async (dispatch) => {
-  console.log("join new game called");
-  console.log(`Code: ${code}`);
-  console.log(player);
   //Set Headers
   dispatch({
     type: CONNECTING_SOCKET,
@@ -459,10 +390,6 @@ export const joinNewGame = (player, code) => async (dispatch) => {
       payload: res.data, //Game
     });
   } catch (err) {
-    const errors = err.response.data.errors;
-    if (errors) {
-      console.log(errors);
-    }
     dispatch({
       type: JOIN_GAME_FAIL,
     });
@@ -481,7 +408,6 @@ export const joinNewGame = (player, code) => async (dispatch) => {
 
   //Function dispatches error to reducer
   const onError = () => {
-    console.log(onError);
     dispatch({
       type: CONNECT_SOCKET_FAIL,
     });
@@ -493,9 +419,7 @@ export const joinNewGame = (player, code) => async (dispatch) => {
 
   //Function dispatches success with game payload and stomp client
   const onReceived = (payload) => {
-    console.log("received");
     let data = JSON.parse(payload.body);
-    console.log(data);
     dispatch({
       type: CONNECT_SOCKET_SUCCESS,
       payload: { data: data, stompClient: stompClient, sock: Sock }, //Game
@@ -505,7 +429,6 @@ export const joinNewGame = (player, code) => async (dispatch) => {
 
 //Makes a move on the board
 export const makeAMove = (x, y, playerId, gameId) => async (dispatch) => {
-  console.log("making a move");
   const config = {
     headers: {
       "Content-Type": "application/json",
@@ -530,7 +453,5 @@ export const makeAMove = (x, y, playerId, gameId) => async (dispatch) => {
       type: MOVE_SUCCESS,
       payload: res.data, //Game
     });
-  } catch (err) {
-    console.log(err);
-  }
+  } catch (err) {}
 };
