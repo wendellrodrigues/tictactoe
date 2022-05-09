@@ -2,11 +2,9 @@ import styled from "styled-components";
 
 export const Wrapper = styled.div`
   position: relative;
-  width: 600px;
+  width: 400px;
   background: #fffff;
   height: auto;
-  border-radius: 15px;
-  box-shadow: 0px 0px 5px #bababa;
 `;
 
 export const Form = styled.div`
@@ -104,4 +102,20 @@ export const AlertText = styled.p`
   margin-left: 5px;
   margin-top: 10px;
   color: #f07a7a;
+`;
+
+export const JoinGameWrapper = styled.div`
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto auto;
+`;
+
+export const Spacer = styled.div`
+  margin-bottom: 30px;
+`;
+
+export const OrText = styled.p`
+  font-size: 12px;
+  color: gray;
+  line-height: normal;
 `;

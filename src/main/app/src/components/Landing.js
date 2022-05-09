@@ -19,10 +19,13 @@ const Landing = (props) => {
       return <Game />;
     } else {
       return (
-        <StartForm
-          formData={formData}
-          setFormData={(formData) => setFormData(formData)}
-        />
+        <LandingWrapper>
+          <Title>Tic-Tac-Toe</Title>
+          <StartForm
+            formData={formData}
+            setFormData={(formData) => setFormData(formData)}
+          />
+        </LandingWrapper>
       );
     }
   };
@@ -35,6 +38,26 @@ const Landing = (props) => {
     </Fragment>
   );
 };
+
+const Title = styled.h1`
+  font-weight: bold;
+  font-size: 60px;
+  margin-bottom: 30px;
+  line-height; normal;
+  overflow: hidden;
+`;
+
+const LandingWrapper = styled.div`
+  display: grid;
+  justify-items: center;
+  justify-content: center;
+  gap: 40px;
+  height: auto;
+  width: auto;
+  overflow: hidden;
+  line-height; normal;
+  
+`;
 
 //Styled Components
 const Wrapper = styled.div`

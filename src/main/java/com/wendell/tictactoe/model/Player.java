@@ -14,11 +14,10 @@ public class Player {
     @Column
     private String playerId;
 
+
     @Column
     private String name;
 
-//    @Column
-//    private String ipAddress;
 
     public Player() {}
 

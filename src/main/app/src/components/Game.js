@@ -1,18 +1,14 @@
 import React, { useState, useEffect, Fragment } from "react";
 import { connect } from "react-redux";
-//import { Navigate } from "react-router-dom";
-import styled from "styled-components";
 import StartForm from "./forms/StartForm";
 import PropTypes from "prop-types";
+
 import Lottie from "react-lottie";
+import { loadingOpts, waitingOpts } from "../config/lottieConfig";
 
 //Icons
 import X_Icon from "../static/X_Icon.png";
 import O_Icon from "../static/O_Icon.png";
-
-//Lottie animations
-import loadingSpinner from "../static/loading.json";
-import waitingDots from "../static/waiting.json";
 
 //Actions
 import {
@@ -21,6 +17,29 @@ import {
   playAgain,
   joinNewGame,
 } from "../actions/init";
+
+//Styles
+import {
+  LoadingGameWrapper,
+  LoadingGameText,
+  TitleWrapper,
+  TitleText,
+  SubheadlineText,
+  InformationText,
+  InfoText,
+  TurnWrapper,
+  TableWrapper,
+  Table,
+  Tile,
+  Column,
+  Symbol,
+  ButtonWrapper,
+  SubmitButton,
+  SubmitText,
+  TwoButtonWrapper,
+  ScoreDiv,
+  ScoreText,
+} from "../styles/GameStyles";
 
 const Game = (props) => {
   const {
@@ -46,34 +65,11 @@ const Game = (props) => {
   });
 
   const [score, setScore] = useState({
-    opponentId: "",
-    score: [],
+    yourWins: 0,
+    opponentWins: 0,
   });
 
-  //Lottie config
-  const loadingOpts = {
-    loop: true,
-    autoplay: true,
-    animationData: loadingSpinner,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
-
-  //Lottie config
-  const waitingOpts = {
-    loop: true,
-    autoplay: true,
-    animationData: waitingDots,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
-
-  //Listens for state changes of game and re-renders board every time
-  useEffect(() => {
-    mapGameToBoard(game.board);
-
+  const setInitialScore = (game) => {
     //Handle local score on loads
     let player1 = game.player1;
     let player2 = game.player2;
@@ -89,30 +85,80 @@ const Game = (props) => {
       let score = JSON.parse(localStorage.getItem(gameId));
       if (!score) {
         localStorage.setItem(gameId, JSON.stringify([0, 0]));
+        score = [0, 0];
       }
 
-      setScore({
-        opponentId: gameId,
-        score: score,
-      });
+      let yourWins = score[0];
+      let opponentWins = score[1];
 
-      console.log(score);
+      setScore({
+        yourWins,
+        opponentWins,
+      });
     }
+  };
+
+  //Listens for state changes of game and re-renders board every time
+  useEffect(() => {
+    mapGameToBoard(game.board);
+    setInitialScore(game);
+    console.log(`Score:`);
+    console.log(score);
   }, [game]);
 
+  //For setting localStorage score after game is finished
+  useEffect(() => {
+    if (game.status == "finished") {
+      let self;
+      let opponent;
+      let winnerNum = game.winner;
+      let winner;
+      if (winnerNum == 1) winner = game.player1.playerId;
+      else winner = game.player2.playerId;
+
+      if (type == "creator") {
+        self = game.player1.playerId;
+        opponent = game.player2.playerId;
+      } else {
+        self = game.player2.playerId;
+        opponent = game.player1.playerId;
+      }
+
+      let score = JSON.parse(localStorage.getItem(opponent));
+
+      let yourWins = score[0];
+      let opponentWins = score[1];
+      let newScore = [];
+
+      if (winner == self) {
+        yourWins += 1;
+      } else {
+        opponentWins += 1;
+      }
+      newScore = [yourWins, opponentWins];
+      localStorage.setItem(opponent, JSON.stringify(newScore));
+
+      setScore({
+        yourWins,
+        opponentWins,
+      });
+    }
+  }, [game.winner]);
+
+  //Disconnect sockjs connection upon page unload
   window.addEventListener("beforeunload", (event) => {
     // Cancel the event as stated by the standard.
     event.preventDefault();
     // Chrome requires returnValue to be set.
     event.returnValue = "";
 
-    stompClient.disconnect(); ///Disconnect from last game's socket connection
+    if (stompClient) stompClient.disconnect(); ///Disconnect from last game's socket connection
+
     sock.close(); //Not sure if needed
   });
 
   //Sets the game board every time a move is made
   const mapGameToBoard = (board) => {
-    console.log("mapping game to board");
     setGameBoard({
       0: board[0][0],
       1: board[0][1],
@@ -124,9 +170,9 @@ const Game = (props) => {
       7: board[2][1],
       8: board[2][2],
     });
-    console.log(gameBoard);
   };
 
+  //Function that handles making a move
   const handleMove = (id) => {
     let x, y;
     if (id == 0) {
@@ -195,10 +241,12 @@ const Game = (props) => {
           </Column>
         </Table>
         {displayBelowBoardText()}
+        {ScoreBoard()}
       </TableWrapper>
     );
   };
 
+  //Exit button component
   const exitButton = (
     <ButtonWrapper>
       <SubmitButton
@@ -213,81 +261,45 @@ const Game = (props) => {
     </ButtonWrapper>
   );
 
-  let Button;
+  //Rematch button logic
+  const rematchButton = () => {
+    let Button;
 
-  //Checks to see if one of the players started a rematch.
-  //Button logic either creates a new game or joins already created game
-  if (!game.nextGame) {
-    Button = (
-      <ButtonWrapper>
-        <SubmitButton
-          onClick={() => {
-            stompClient.disconnect(); ///Disconnect from last game's socket connection
-            sock.close(); //Not sure if needed
-            props.playAgain(player, game, stompClient);
-          }}
-        >
-          <SubmitText>Rematch!</SubmitText>
-        </SubmitButton>
-      </ButtonWrapper>
-    );
-  } else {
-    Button = (
-      <ButtonWrapper>
-        <SubmitButton
-          onClick={() => {
-            stompClient.disconnect(); ///Disconnect from last game's socket connection
-            sock.close(); //Not sure if needed
-            let thisPlayer;
-
-            props.joinNewGame(player, game.nextGame);
-          }}
-        >
-          <SubmitText>Rematch!</SubmitText>
-        </SubmitButton>
-      </ButtonWrapper>
-    );
-  }
-
-  //Updates the local score on wins/loss
-  const handleLocalScoreOnWinOrLoss = () => {
-    let self;
-    let opponent;
-    let winnerNum = game.winner;
-    let winner;
-    if (winnerNum == 1) winner = game.player1.playerId;
-    else winner = game.player2.playerId;
-
-    if (type == "creator") {
-      self = game.player1.playerId;
-      opponent = game.player2.playerId;
+    //Checks to see if one of the players started a rematch.
+    //Button logic either creates a new game or joins already created game
+    if (!game.nextGame) {
+      Button = (
+        <ButtonWrapper>
+          <SubmitButton
+            onClick={() => {
+              stompClient.disconnect(); ///Disconnect from last game's socket connection
+              sock.close(); //Not sure if needed
+              props.playAgain(player, game, stompClient);
+            }}
+          >
+            <SubmitText>Rematch!</SubmitText>
+          </SubmitButton>
+        </ButtonWrapper>
+      );
     } else {
-      self = game.player2.playerId;
-      opponent = game.player1.playerId;
+      Button = (
+        <ButtonWrapper>
+          <SubmitButton
+            onClick={() => {
+              stompClient.disconnect(); ///Disconnect from last game's socket connection
+              sock.close(); //Not sure if needed
+              let thisPlayer;
+
+              props.joinNewGame(player, game.nextGame);
+            }}
+          >
+            <SubmitText>Rematch!</SubmitText>
+          </SubmitButton>
+        </ButtonWrapper>
+      );
     }
 
-    let score = JSON.parse(localStorage.getItem(opponent));
-    console.log(score);
-    let yourWins = score[0];
-    let opponentWins = score[1];
-    let newScore = [];
-
-    console.log(`Your wins: ${yourWins}`);
-    console.log(`Opponent wins: ${opponentWins}`);
-
-    console.log(`Winner: ${winner}`);
-    console.log(`Self: ${self}`);
-
-    if (winner == self) {
-      newScore = [yourWins + 1, opponentWins];
-    } else {
-      newScore = [yourWins, opponentWins + 1];
-    }
-
-    console.log(`new score`);
-    console.log(newScore);
-
-    localStorage.setItem(opponent, JSON.stringify(newScore));
+    return Button;
   };
 
   const displayBelowBoardText = () => {
@@ -301,7 +313,6 @@ const Game = (props) => {
         </TurnWrapper>
       );
     } else if (game.winner) {
-      handleLocalScoreOnWinOrLoss();
       return WinnerText();
     } else if (totalTurns > 8 && game.winner == null) {
       return (
@@ -309,7 +320,7 @@ const Game = (props) => {
           <InfoText type="orange">Tie Game</InfoText>
           <TwoButtonWrapper>
             {exitButton}
-            {Button}
+            {rematchButton()}
           </TwoButtonWrapper>
         </TurnWrapper>
       );
@@ -328,7 +339,7 @@ const Game = (props) => {
             <InfoText type="green">Congratulations! You won!</InfoText>
             <TwoButtonWrapper>
               {exitButton}
-              {Button}
+              {rematchButton()}
             </TwoButtonWrapper>
           </TurnWrapper>
         );
@@ -338,7 +349,7 @@ const Game = (props) => {
             <InfoText type="red">You lost. Better luck next time!</InfoText>
             <TwoButtonWrapper>
               {exitButton}
-              {Button}
+              {rematchButton()}
             </TwoButtonWrapper>
           </TurnWrapper>
         );
@@ -350,7 +361,7 @@ const Game = (props) => {
             <InfoText type="green">Congratulations! You won!</InfoText>
             <TwoButtonWrapper>
               {exitButton}
-              {Button}
+              {rematchButton()}
             </TwoButtonWrapper>
           </TurnWrapper>
         );
@@ -360,7 +371,7 @@ const Game = (props) => {
             <InfoText type="red">You lost. Better luck next time!</InfoText>
             <TwoButtonWrapper>
               {exitButton}
-              {Button}
+              {rematchButton()}
             </TwoButtonWrapper>
           </TurnWrapper>
         );
@@ -455,6 +466,41 @@ const Game = (props) => {
     );
   };
 
+  const ScoreBoard = () => {
+    if (game.player1 && game.player2) {
+      let self;
+      let opponent;
+      let yourName;
+      let opponentName;
+
+      if (type == "creator") {
+        self = game.player1;
+        opponent = game.player2;
+      } else {
+        self = game.player2;
+        opponent = game.player1;
+      }
+
+      yourName = self.name;
+      opponentName = opponent.name;
+
+      if (yourName == "") yourName = "You";
+      if (opponentName == "") opponentName = "Opponent";
+
+      const yourWins = score.yourWins;
+      const opponentWins = score.opponentWins;
+
+      return (
+        <ScoreDiv>
+          <ScoreText type="green">{`${yourName}: ${yourWins}`}</ScoreText>
+          <ScoreText type="red">{`${opponentName}: ${opponentWins}`}</ScoreText>
+        </ScoreDiv>
+      );
+    } else {
+      return <div></div>;
+    }
+  };
+
   const handleView = () => {
     if (connectingSocket) {
       return (
@@ -470,137 +516,6 @@ const Game = (props) => {
 
   return <Fragment>{handleView()}</Fragment>;
 };
-
-const LoadingGameWrapper = styled.div`
-  display: grid;
-  gap: 10px;
-  justify-items: center;
-`;
-
-const LoadingGameText = styled.p`
-  font-size: 20px;
-  font-weight: medium;
-  line-height: normal;
-`;
-
-const TitleWrapper = styled(LoadingGameWrapper)`
-  margin-bottom: 90px;
-`;
-
-const TitleText = styled.p`
-  font-size: 30px;
-  font-weight: bold;
-  line-height: normal;
-`;
-
-const SubheadlineText = styled.p`
-  font-size: 18px;
-  font-weight: medium;
-  line-height: normal;
-`;
-
-const InformationText = styled.p`
-  font-size: 15px;
-  font-weight: bold;
-  line-height: normal;
-`;
-
-const InfoText = styled.p`
-  font-size: 15px;
-  font-weight: bold;
-  line-height: normal;
-  color: ${(props) => (props.type == "green" ? "green" : "red")};
-
-  ${(props) => {
-    if (props.type === "green")
-      return `
-            color: green
-        `;
-    else if (props.type === "red")
-      return `
-            color: red
-        `;
-    else
-      return `
-    color: orange;
-    
-    `;
-  }}
-`;
-
-const TurnWrapper = styled.div`
-  display: grid;
-  gap: -20px;
-  justify-items: center;
-`;
-
-const TableWrapper = styled.div``;
-
-const Table = styled.div`
-  display: grid;
-  justify-content: center;
-  grid-template-columns: auto auto auto;
-  margin-bottom: 20px;
-`;
-
-const Column = styled.div``;
-const Tile = styled.div`
-  width: 100px;
-  height: 100px;
-  margin-bottom: 10px;
-  margin-left: 10px;
-  background: #dedede;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 15px;
-  transition: 0.5s ease-in;
-
-  :hover {
-    transition: 0.5s ease-in;
-    background: #b0b0b0;
-    cursor: pointer;
-  }
-`;
-
-const Symbol = styled.img`
-  margin: auto;
-`;
-
-const ButtonWrapper = styled.div`
-  margin-top: 20px;
-  justify-content: center;
-  width: 100px;
-`;
-
-const SubmitButton = styled.div`
-  display: grid;
-  margin: auto;
-  height: 45px;
-  background: #171717;
-  border-radius: 10px;
-  justify-items: center;
-  align-items: center;
-  transition: 0.2s ease-in;
-  box-shadow: 0px 0px 5px #bababa;
-  :hover {
-    background: #1c1c1c;
-    cursor: pointer;
-  }
-`;
-
-export const SubmitText = styled.p`
-  color: white;
-  font-size: 17px;
-  font-weight: bold;
-  line-height: normal;
-`;
-
-export const TwoButtonWrapper = styled.div`
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 20px;
-`;
 
 Game.propTypes = {
   createSocketConnection: PropTypes.func.isRequired,

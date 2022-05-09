@@ -37,6 +37,13 @@ public class GameController {
         return ResponseEntity.ok(game);
     }
 
+    @PostMapping("/startWithPlayerId")
+    public ResponseEntity<Game> startWithPlayerId(@RequestBody Player player) {
+        Game game = gameService.createGameWithPlayerId(player);
+        simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
+        return ResponseEntity.ok(game);
+    }
+
     @PostMapping("/playAgain")
     public ResponseEntity<Game> playAgain(@RequestBody PlayAgainGame againGame) {
         Player player = againGame.getPlayer();
@@ -50,6 +57,13 @@ public class GameController {
     @PostMapping("/connect")
     public ResponseEntity<Game> connect(@RequestBody ConnectionRequest request) throws InvalidGameException {
         Game game = gameService.connectToGame(request.getPlayer(), request.getGameId());
+        simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
+        return ResponseEntity.ok(game);
+    }
+
+    @PostMapping("/connectWithPlayerId")
+    public ResponseEntity<Game> connectWithPlayerId(@RequestBody ConnectionRequest request) throws InvalidGameException {
+        Game game = gameService.connectToGameWithPlayerId(request.getPlayer(), request.getGameId());
         simpMessagingTemplate.convertAndSend("/topic/game-progress/" + game.getGameId(), game);
         return ResponseEntity.ok(game);
     }

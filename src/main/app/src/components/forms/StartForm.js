@@ -2,7 +2,12 @@ import React, { useRef, useState, Fragment, useEffect } from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import PropTypes from "prop-types";
-import { createGame, joinGame } from "../../actions/init";
+import {
+  createGame,
+  createGameWithPlayerId,
+  joinGame,
+  joinWithPlayerId,
+} from "../../actions/init";
 
 //Icon
 import KeyIcon from "../../static/icons/key.svg";
@@ -21,6 +26,9 @@ import {
   SubmitText,
   AlertWrapper,
   AlertText,
+  JoinGameWrapper,
+  Spacer,
+  OrText,
 } from "../../styles/FormStyles";
 
 const StartForm = (props) => {
@@ -38,12 +46,26 @@ const StartForm = (props) => {
 
   //When user clicks "Create Game"
   const onCreateGame = () => {
-    props.createGame({ name });
+    let playerId = localStorage.getItem("playerId");
+    if (playerId) {
+      props.createGameWithPlayerId(playerId, name);
+    } else {
+      props.createGame({ name });
+    }
   };
 
   //When user clicks "Join Game"
   const onJoinGame = () => {
-    props.joinGame({ name, code });
+    let playerId = localStorage.getItem("playerId");
+    if (playerId) {
+      const player = {
+        name,
+        playerId,
+      };
+      props.joinWithPlayerId(player, code);
+    } else {
+      props.joinGame({ name, code });
+    }
   };
 
   return (
@@ -72,6 +94,7 @@ const StartForm = (props) => {
             <SubmitText>Create Game</SubmitText>
           </SubmitButton>
         </ButtonWrapper>
+        <OrText>OR</OrText>
         <JoinGameWrapper>
           <InputWrapper>
             <Input name="name">
@@ -100,19 +123,16 @@ const StartForm = (props) => {
   );
 };
 
-const JoinGameWrapper = styled.div`
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto auto;
-`;
-
-const Spacer = styled.div`
-  margin-bottom: 60px;
-`;
-
 StartForm.propTypes = {
+  createGameWithPlayerId: PropTypes.func.isRequired,
   createGame: PropTypes.func.isRequired,
   joinGame: PropTypes.func.isRequired,
+  joinWithPlayerId: PropTypes.func.isRequired,
 };
 
-export default connect(null, { createGame, joinGame })(StartForm);
+export default connect(null, {
+  createGame,
+  createGameWithPlayerId,
+  joinGame,
+  joinWithPlayerId,
+})(StartForm);
